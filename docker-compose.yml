@@ -1,0 +1,48 @@
+version: "3.8"
+services:
+  frontend:
+    build: ./frontend
+    working_dir: /app
+    ports:
+      - 80:3001
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+  backend:
+    build: ./backend
+    working_dir: /app
+    environment:
+      - PORT=3000
+      - DB1_URL=postgresql://mestre:123456@db1:5432/db
+      - DB2_URL=postgresql://mestre:123456@db2:5432/db
+    ports:
+      - 3000:3000
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db1
+      - db2
+  db1:
+    image: postgres:15.1
+    restart: always
+    environment:
+      - POSTGRES_USER=mestre
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=db
+    # ports:
+    #   - 8001:5432
+    volumes:
+      - ./db1.sql:/docker-entrypoint-initdb.d/db1.sql
+
+  db2:
+    image: postgres:15.1
+    restart: always
+    environment:
+      - POSTGRES_USER=mestre
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=db
+    # ports:
+    #   - 8002:5432
+    volumes:
+      - ./db2.sql:/docker-entrypoint-initdb.d/db2.sql
