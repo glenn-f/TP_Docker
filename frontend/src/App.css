@@ -1,0 +1,23 @@
+li {
+  list-style-type: none;
+  text-align: start;
+}
+
+.identificacao {
+  display: flex;
+  flex-wrap: nowrap;
+}
+.logo {
+  height: 7em;
+  will-change: filter;
+  transition: filter 800ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 1em 5em #64e8ff);
+}
+.dados {
+  transition: filter 300ms;
+}
+.dados:hover {
+  filter: drop-shadow(0 0 2em #44ff2ccc);
+}
