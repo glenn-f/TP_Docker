@@ -33,6 +33,7 @@ services:
     # ports:
     #   - 8001:5432
     volumes:
+      - db_1:/var/lib/postgresql/data
       - ./db1.sql:/docker-entrypoint-initdb.d/db1.sql
 
   db2:
@@ -45,4 +46,8 @@ services:
     # ports:
     #   - 8002:5432
     volumes:
+      - db_2:/var/lib/postgresql/data
       - ./db2.sql:/docker-entrypoint-initdb.d/db2.sql
+volumes:
+  db_1:
+  db_2:
