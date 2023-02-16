@@ -18,8 +18,6 @@ const DB1_URL = process.env.DB1_URL;
 const DB2_URL = process.env.DB2_URL;
 const db1_client = new Client(DB1_URL);
 const db2_client = new Client(DB2_URL);
-db1_client.connect().then(() => console.log('Postgres: db1 conectado'));
-db2_client.connect().then(() => console.log('Postgres: db2 conectado'));
 
 //! Funções CRUD
 function inserir(db) {
@@ -63,4 +61,19 @@ app.post("/db2", inserir(db2_client));
 app.delete("/db2", remover(db2_client));
 
 //! Iniciar Backend
-app.listen(PORT, () => { console.log(`Backend rodando na porta ${PORT}.`); });
+(async function () {
+  console.log("Iniciando conexão aos BDs.");
+  for (let t = 0; t < 20; t++) {
+    try {
+      await db1_client.connect().then(() => console.log('Postgres: db1 conectado'));
+      await db2_client.connect().then(() => console.log('Postgres: db2 conectado'));
+      app.listen(PORT, () => { console.log(`Backend rodando na porta ${PORT}.`); });
+      break;
+    }
+    catch (e) {
+      console.error(e);
+    }
+    if (t == 4) process.exit(1);
+    else await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+})();
