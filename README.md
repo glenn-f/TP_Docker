@@ -5,7 +5,7 @@
 
 ## Descrição Inicial
 
-O trabalho consiste na criação de uma aplicação multi-contêiner usando *Docker Compose*, onde o **frontend** está em um contêiner, o **backend** em um segundo contêiner e dois bancos de dados estão em contêiner diferentes (**db1** e **db2**).  
+O trabalho consiste na criação de uma aplicação multi-contêiner usando [*Docker Compose*](https://docs.docker.com/compose/), onde o **frontend** está em um contêiner, o **backend** em um segundo contêiner e dois bancos de dados estão em contêiner diferentes (**db1** e **db2**).  
 
 A aplicação de **frontend** depende do **backend**, que por sua vez depende dos dois bancos de dados(**db1** e **db2**). O backend precisa ter as informações de URL para os dois bancos de dados. As informações do banco de dados são mantidas em volumes separados (**db_1** e **db_2**). A porta **3001** do contêiner **frontend** é exposta na porta **80** do navegador para acesso via endereço http://localhost/.  
 
@@ -19,10 +19,12 @@ Utilize o **comando** abaixo para iniciar a aplicação e todos os seus contêin
 docker compose up -d
 ```
 
-## Observações
+## Observações de Implementação
 
-O **backend** é uma API que utiliza a porta **3000** do *host* para receber chamadas do *browser*. Foi desenvolvido com **Node + Express**.
+O **frontend** é uma SPA exposta na porta **80**. Foi desenvolvido com **[Svelte](https://svelte.dev/) + [Vite](https://vitejs.dev/)**.
 
-O **frontend** é desenvolvido com **Svelte + Vite**.
+O **backend** é uma API exposta na porta **3000**. Deve receber chamadas do *frontend* via *browser* do usuário. Foi desenvolvido com **[Node](https://nodejs.org/) + [Express](https://expressjs.com/)**.
 
-Os **bancos de dados** são desenvolvidos com **Postgres**.
+O **db1** é um banco de dados relacional, gerenciado pelo [**PostgreSQL**](https://www.postgresql.org/).
+
+O **db2** é um banco de dados orientado a documentos, gerenciado pelo [**MongoDB**](https://www.mongodb.com/).
