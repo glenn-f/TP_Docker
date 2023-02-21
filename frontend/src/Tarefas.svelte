@@ -101,6 +101,7 @@
   button {
     margin-left: 4px;
     padding: 0.3em 0.5em;
+    color: cornsilk;
   }
   form {
     display: flex;
