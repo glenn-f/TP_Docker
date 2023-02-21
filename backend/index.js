@@ -1,10 +1,19 @@
-import express from "express";
 import bodyParser from "body-parser";
-import { Client } from "pg";
+import express from "express";
+import { MongoClient } from "mongodb";
+import Postgres from "pg";
+
+//! Variáveis de Ambiente
+const PORT = parseInt(process.env.PORT);
+const DB1_URI = process.env.DB1_URI;
+const DB2_URI = process.env.DB2_URI;
+
+//! Database Config
+const pg = new Postgres.Client(DB1_URI);
+const mongo = new MongoClient(DB2_URI).db('db').collection('tarefas');
 
 //! Express Config
 const app = express();
-const PORT = parseInt(process.env.PORT);
 app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE');
@@ -13,67 +22,51 @@ app.use(function (req, res, next) {
 });
 app.use(bodyParser.json({ type: 'application/json' }));
 
-//! Postgres Config
-const DB1_URL = process.env.DB1_URL;
-const DB2_URL = process.env.DB2_URL;
-const db1_client = new Client(DB1_URL);
-const db2_client = new Client(DB2_URL);
-
-//! Funções CRUD
-function inserir(db) {
-  return async function (req, res) {
-    const nome = req.body.nome;
-    if (nome && typeof nome == 'string')
-      await db.query("INSERT INTO tarefas(nome) VALUES ($1) ON CONFLICT DO NOTHING", [nome]);
-    res.end();
-  };
-}
-function remover(db) {
-  return async function (req, res) {
-    const nome = req.body.nome;
-    if (nome && typeof nome == 'string')
-      await db.query("DELETE FROM tarefas WHERE nome=$1", [nome]);
-    res.end();
-  };
+//! Middlewares
+function validar(req, res, next) {
+  const nome = req.body.nome;
+  if (nome && typeof nome == 'string') next();
+  else res.status(400).end();
 }
 
-//! Rotas do Backend
-////* Listagem de Tarefas
-app.get("/", async function (req, res) {
+//! Rotas da Aplicação
+app.get("/", async function (req, res) {//! Listar Tarefas
   const mapa = new Map();
-  await db1_client.query("SELECT nome FROM tarefas").then(res => res.rows
-    .forEach(({ nome }) => mapa.set(nome, { nome, db1: true }))
-  );
-  await db2_client.query("SELECT nome FROM tarefas").then(res => res.rows
-    .forEach(({ nome }) => mapa.set(nome, { ...mapa.get(nome), nome, db2: true }))
-  );
+  await pg.query("SELECT * FROM tarefas").then(res => res.rows.forEach(
+    ({ nome }) => mapa.set(nome, { nome, db1: true })
+  ));
+  await mongo.find().toArray().then(docs => docs.forEach(
+    ({ nome }) => mapa.set(nome, { ...mapa.get(nome), nome, db2: true })
+  ));
   const lista = [];
   mapa.forEach(data => lista.push(data));
   res.send(JSON.stringify(lista));
 });
-////* Inserir no DB1
-app.post("/db1", inserir(db1_client));
-////* Remover do DB1
-app.delete("/db1", remover(db1_client));
-////* Inserir no DB2
-app.post("/db2", inserir(db2_client));
-////* Remover do DB2
-app.delete("/db2", remover(db2_client));
+app.post("/db1", validar, async function (req, res) {//! Inserir no DB1
+  await pg.query("INSERT INTO tarefas(nome) VALUES ($1) ON CONFLICT DO NOTHING", [req.body.nome]);
+  res.end();
+});
+app.delete("/db1", validar, async function (req, res) {//! Remover do DB1
+  await pg.query("DELETE FROM tarefas WHERE nome=$1", [req.body.nome]);
+  res.end();
+});
+app.post("/db2", validar, async function (req, res) {//! Inserir no DB2
+  await mongo.updateOne({ nome: req.body.nome }, { $setOnInsert: { nome: req.body.nome } }, { upsert: true });
+  res.end();
+});
+app.delete("/db2", validar, async function (req, res) {//! Remover do DB2
+  await mongo.deleteOne({ nome: req.body.nome });
+  res.end();
+});
 
 //! Iniciar Backend
-(async function () {
-  console.log("Iniciando conexão aos BDs.");
-  for (let t = 0; t < 20; t++) {
-    try {
-      await db1_client.connect().then(() => console.log('Postgres: db1 conectado'));
-      await db2_client.connect().then(() => console.log('Postgres: db2 conectado'));
-      app.listen(PORT, () => { console.log(`Backend rodando na porta ${PORT}.`); });
-      break;
-    }
-    catch (e) {
-      console.error(e);
-    }
-    if (t == 4) process.exit(1);
-    else await new Promise(resolve => setTimeout(resolve, 2000));
+(async function run() {
+  try {
+    await pg.connect().then(() => console.log('DB1: PostgreSQL conectado'));
+    await mongo.findOne().then(() => console.log('DB2: MongoDB conectado'));
+    app.listen(PORT, () => console.log(`Backend rodando na porta ${PORT}.`));
+  } catch (error) {
+    console.error(error);
+    console.log("Erro ao conectar ao BD. Backend desligando...");
   }
 })();
