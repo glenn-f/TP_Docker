@@ -14,7 +14,7 @@
     </ul>
   </div>
   <hr />
-  <h1>Listagem de Tarefass</h1>
+  <h1>Listagem de Tarefas</h1>
   <h2>O que precisa ser feito?</h2>
 
   <Tarefas />

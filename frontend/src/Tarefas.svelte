@@ -10,9 +10,7 @@
     tarefa = nome;
     if (nome) {
       axios
-        .post(`http://localhost:3000/${db}`, {
-          nome,
-        })
+        .post(`http://localhost:3000/${db}`, { nome })
         .then(atualizarListagem);
     }
   }
