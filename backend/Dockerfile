@@ -1,9 +1,7 @@
 FROM node:19-alpine
 
-COPY package.json .
+COPY . .
 
 RUN npm i
-
-COPY . .
 
 CMD npm start

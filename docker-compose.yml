@@ -15,7 +15,7 @@ services:
     working_dir: /app
     environment:
       - PORT=3000
-      - DB1_URI=postgresql://api:123987@db1:5432/db
+      - DB1_URI=postgres://api:123987@db1:5432/db
       - DB2_URI=mongodb://api:123987@db2:27017/
     ports:
       - 3000:3000
